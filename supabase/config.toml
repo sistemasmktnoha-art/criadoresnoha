@@ -1,0 +1,8 @@
+project_id = "atoszgsljmxjghjptniz"
+
+# Funções chamadas sem login (formulário público e feed por token)
+[functions.submit-public-idea]
+verify_jwt = false
+
+[functions.influencers-feed]
+verify_jwt = false

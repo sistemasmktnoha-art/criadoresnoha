@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 20% 97%;
+    --foreground: 228 20% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 228 20% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 228 20% 12%;
+
+    --primary: 40 70% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 40 15% 92%;
+    --secondary-foreground: 228 15% 25%;
+
+    --muted: 40 10% 93%;
+    --muted-foreground: 228 8% 45%;
+
+    --accent: 40 15% 92%;
+    --accent-foreground: 228 20% 12%;
+
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 12% 88%;
+    --input: 40 12% 88%;
+    --ring: 40 70% 45%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 40 15% 95%;
+    --sidebar-foreground: 228 10% 40%;
+    --sidebar-primary: 40 70% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 40 12% 90%;
+    --sidebar-accent-foreground: 228 20% 12%;
+    --sidebar-border: 40 12% 88%;
+    --sidebar-ring: 40 70% 45%;
+
+    --chart-1: 40 70% 45%;
+    --chart-2: 200 60% 45%;
+    --chart-3: 150 50% 40%;
+    --chart-4: 280 45% 50%;
+    --chart-5: 15 70% 50%;
+
+    --success: 150 55% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 40 90% 50%;
+    --warning-foreground: 40 30% 15%;
+
+    --note-rose: 350 80% 94%;
+    --note-rose-border: 350 45% 84%;
+    --note-green: 145 55% 92%;
+    --note-green-border: 145 35% 80%;
+    --note-sky: 200 75% 93%;
+    --note-sky-border: 200 40% 82%;
+    --note-amber: 45 85% 91%;
+    --note-amber-border: 45 50% 78%;
+    --note-violet: 270 60% 94%;
+    --note-violet-border: 270 35% 83%;
+    --note-teal: 170 55% 92%;
+    --note-teal-border: 170 35% 79%;
+  }
+}
+
+@layer components {
+  .note-pastel-rose { background-color: hsl(var(--note-rose)); border-color: hsl(var(--note-rose-border)); }
+  .note-pastel-green { background-color: hsl(var(--note-green)); border-color: hsl(var(--note-green-border)); }
+  .note-pastel-sky { background-color: hsl(var(--note-sky)); border-color: hsl(var(--note-sky-border)); }
+  .note-pastel-amber { background-color: hsl(var(--note-amber)); border-color: hsl(var(--note-amber-border)); }
+  .note-pastel-violet { background-color: hsl(var(--note-violet)); border-color: hsl(var(--note-violet-border)); }
+  .note-pastel-teal { background-color: hsl(var(--note-teal)); border-color: hsl(var(--note-teal-border)); }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(40 15% 95%);
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(40 10% 82%);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(40 10% 72%);
+}
