@@ -1,4 +1,5 @@
 import { InstagramHandle } from "@/components/InstagramHandle";
+import { GenerateMessageDialog } from "@/components/GenerateMessageDialog";
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import jsPDF from "jspdf";
@@ -232,6 +233,7 @@ export default function CampaignDetail() {
   const { toast } = useToast();
   const campaign = campaigns.find((c) => c.id === id);
 
+  const [msgFor, setMsgFor] = useState<string | null>(null);
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
   const [editingMatId, setEditingMatId] = useState<string | null>(null);
   const [contentDialogOpen, setContentDialogOpen] = useState(false);
@@ -2594,6 +2596,15 @@ export default function CampaignDetail() {
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 shrink-0"
+                        onClick={(e) => { e.stopPropagation(); setMsgFor(p.influencerId); }}
+                        title="Gerar mensagem (DM/WhatsApp)"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
                         onClick={(e) => { e.stopPropagation(); navigate(`/influencer/${inf.id}`); }}
                         title="Ver cadastro"
                       >
@@ -3567,6 +3578,14 @@ export default function CampaignDetail() {
           )}
         </TabsContent>
       </Tabs>
+
+      {msgFor && (() => {
+        const mi = influencers.find((i) => i.id === msgFor);
+        const mp = campaign.participants.find((x) => x.influencerId === msgFor);
+        return mi ? (
+          <GenerateMessageDialog open onOpenChange={(o) => { if (!o) setMsgFor(null); }} influencer={mi} campaign={campaign} participant={mp} />
+        ) : null;
+      })()}
 
       {/* Finalization Rating Dialog */}
       <Dialog open={finalizationOpen} onOpenChange={setFinalizationOpen}>

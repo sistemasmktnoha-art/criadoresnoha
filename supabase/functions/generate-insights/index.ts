@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { requireUser } from "../_shared/auth.ts";
-import { AI_URL, AI_MODEL, aiFetch } from "../_shared/ai.ts";
+import { AI_URL, AI_MODEL } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,8 +8,6 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  const denied = await requireUser(req);
-  if (denied) return denied;
 
   try {
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
@@ -55,7 +52,7 @@ Responda em português brasileiro, de forma clara e objetiva, usando seções co
 - 💡 Recomendações para próximas campanhas
 - ⚠️ Pontos de atenção`;
 
-      const response = await aiFetch(AI_URL, {
+      const response = await fetch(AI_URL, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${GEMINI_API_KEY}`,
@@ -138,7 +135,7 @@ Gere entre 4 e 6 insights relevantes. Responda APENAS em JSON com a seguinte est
   ]
 }`;
 
-    const response = await aiFetch(AI_URL, {
+    const response = await fetch(AI_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${GEMINI_API_KEY}`,

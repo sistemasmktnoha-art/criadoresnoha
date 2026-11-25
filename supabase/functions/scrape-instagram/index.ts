@@ -2,7 +2,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.23.8";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { requireUser } from "../_shared/auth.ts";
 
 // Instagram CDN links expire; copy the photo into permanent public storage.
 async function persistProfilePic(url: string, username: string): Promise<string> {
@@ -61,8 +60,6 @@ serve(async (req) => {
   if (req.method !== "POST") {
     return jsonResponse({ error: "Método não permitido." }, 405);
   }
-  const denied = await requireUser(req);
-  if (denied) return denied;
 
   try {
     const parsedBody = RequestSchema.safeParse(await req.json());

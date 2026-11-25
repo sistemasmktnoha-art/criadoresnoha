@@ -1,4 +1,5 @@
 import { InstagramHandle } from "@/components/InstagramHandle";
+import { GenerateMessageDialog } from "@/components/GenerateMessageDialog";
 import { parseLocalDate } from "@/lib/utils";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
@@ -9,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { StarRating } from "@/components/StarRating";
 import { InfluencerCoupons } from "@/components/InfluencerCoupons";
 import {
-  ArrowLeft, Instagram, Mail, MapPin, Users, Calendar, Megaphone, Trash2, Camera, Crown, Award, Plus, X, Edit, Star, Hash, Copy, Repeat, Loader2,
+  ArrowLeft, MessageCircle as MessageCircleIcon, Instagram, Mail, MapPin, Users, Calendar, Megaphone, Trash2, Camera, Crown, Award, Plus, X, Edit, Star, Hash, Copy, Repeat, Loader2,
 } from "lucide-react";
 import { useState, useRef, useMemo, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
@@ -163,6 +164,7 @@ export default function InfluencerDetail() {
   const [ratingReason, setRatingReason] = useState("");
 
   // Rating history editing
+  const [msgOpen, setMsgOpen] = useState(false);
   const [editingRatingId, setEditingRatingId] = useState<string | null>(null);
   const [editRatingValue, setEditRatingValue] = useState(0);
   const [editRatingReason, setEditRatingReason] = useState("");
@@ -376,6 +378,10 @@ export default function InfluencerDetail() {
       <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" /> Voltar
       </button>
+      <Button size="sm" variant="outline" className="gap-1" onClick={() => setMsgOpen(true)}>
+        <MessageCircleIcon className="h-4 w-4" /> Gerar mensagem (DM/WhatsApp)
+      </Button>
+      {msgOpen && inf && <GenerateMessageDialog open onOpenChange={setMsgOpen} influencer={inf} />}
 
       {/* Header */}
       <div className="flex flex-wrap items-start gap-5">
