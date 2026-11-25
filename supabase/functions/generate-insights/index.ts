@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { requireUser } from "../_shared/auth.ts";
 import { AI_URL, AI_MODEL } from "../_shared/ai.ts";
 
 const corsHeaders = {
@@ -8,6 +9,8 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const denied = await requireUser(req);
+  if (denied) return denied;
 
   try {
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");

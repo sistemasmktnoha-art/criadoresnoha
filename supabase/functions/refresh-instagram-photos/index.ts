@@ -1,6 +1,7 @@
 // One-off maintenance: replace expired Instagram CDN photos with permanent copies.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { requireUser } from "../_shared/auth.ts";
 
 const IG = /cdninstagram|fbcdn/;
 const GATEWAY = "https://api.apify.com/v2";
@@ -23,6 +24,8 @@ const clean = (u: string) => String(u || "").replace(/^@/, "").replace(/^.*insta
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const denied = await requireUser(req);
+  if (denied) return denied;
   const { limit = 40 } = await req.json().catch(() => ({}));
   const { data: rows, error } = await admin.from("app_data").select("id, data").eq("data_key", "influencers");
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
