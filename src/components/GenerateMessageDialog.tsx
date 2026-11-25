@@ -5,7 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, MessageCircle, Instagram } from "lucide-react";
+import { Copy, MessageCircle, Instagram, CalendarPlus } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { useApp } from "@/context/AppContext";
 import type { Campaign, CampaignParticipant, Influencer } from "@/types";
@@ -32,6 +33,10 @@ export function GenerateMessageDialog({ open, onOpenChange, influencer, campaign
   const [deal, setDeal] = useState<Deal>(base.deal);
   const [templateId, setTemplateId] = useState("smart-convite");
   const [text, setText] = useState("");
+  const addDays = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const [dFollow, setDFollow] = useState(addDays(3));
+  const [dPost, setDPost] = useState((participant?.scheduledDate || campaign?.deadline || "").slice(0, 10));
+  const [dShip, setDShip] = useState((campaign?.startDate || "").slice(0, 10));
 
   useEffect(() => {
     if (open) { setScenario(base.scenario); setDeal(base.deal); }
@@ -53,6 +58,21 @@ export function GenerateMessageDialog({ open, onOpenChange, influencer, campaign
     !ctx.campanha && "campanha",
     !ctx.cupom && "cupom",
   ].filter(Boolean) as string[];
+
+  function calUrl(title: string, date: string, details: string) {
+    const d = date.replace(/-/g, "");
+    const next = new Date(date + "T12:00:00"); next.setDate(next.getDate() + 1);
+    const e = next.toISOString().slice(0, 10).replace(/-/g, "");
+    const q = new URLSearchParams({ action: "TEMPLATE", text: title, dates: `${d}/${e}`, details });
+    return `https://calendar.google.com/calendar/render?${q.toString()}`;
+  }
+  const who = `${influencer.name} (@${(influencer.username || "").replace(/^@/, "")})`;
+  const camp = campaign?.name ? ` · ${campaign.name}` : "";
+  const reminders = [
+    { label: "Follow-up", date: dFollow, set: setDFollow, title: `Follow-up: ${influencer.name}${camp}`, details: `Retomar contato com ${who}.` },
+    { label: "Prazo de postagem", date: dPost, set: setDPost, title: `Postagem: ${influencer.name}${camp}`, details: `Prazo de postagem de ${who}.` },
+    { label: "Envio da permuta", date: dShip, set: setDShip, title: `Enviar permuta: ${influencer.name}${camp}`, details: `Enviar peças para ${who}${ctx.produto ? ` (${ctx.produto})` : ""}.` },
+  ];
 
   async function copy() {
     await navigator.clipboard.writeText(text);
@@ -131,6 +151,21 @@ export function GenerateMessageDialog({ open, onOpenChange, influencer, campaign
           ) : (
             <Button disabled title="Sem WhatsApp cadastrado"><MessageCircle className="h-4 w-4 mr-1" /> Sem WhatsApp</Button>
           )}
+        </div>
+
+        <div className="border-t pt-3 space-y-2">
+          <Label className="text-xs flex items-center gap-1"><CalendarPlus className="h-3.5 w-3.5" /> Lembrar no Google Agenda</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {reminders.map((r) => (
+              <div key={r.label} className="space-y-1">
+                <p className="text-[11px] text-muted-foreground">{r.label}</p>
+                <Input type="date" value={r.date} onChange={(e) => r.set(e.target.value)} className="h-8 text-xs" />
+                <Button size="sm" variant="outline" className="w-full h-7 text-xs" disabled={!r.date} asChild={!!r.date}>
+                  {r.date ? <a href={calUrl(r.title, r.date, r.details)} target="_blank" rel="noreferrer">Criar lembrete</a> : <span>Criar lembrete</span>}
+                </Button>
+              </div>
+            ))}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
