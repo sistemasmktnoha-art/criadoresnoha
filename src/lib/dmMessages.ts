@@ -114,7 +114,6 @@ export const SMART_TEMPLATES: SmartTemplate[] = [
           ? `Oi, ${ctx.nome}! Tudo bem? 💛\n\n${lastWork(ctx)}Estamos preparando ${camp} e queria muito ter você de novo com a gente!`
           : `Oi, ${ctx.nome}! Tudo bem? 😊\n\nAqui é da Noha Shoes. A gente acompanha o seu conteúdo e acha que tem tudo a ver com a marca! Estamos preparando ${camp} e queria te convidar para fazer parte.`;
       const extras = [
-        ctx.prazo ? `📅 Prazo: ${ctx.prazo}` : "",
         ctx.cupom ? `🏷️ Seu cupom: ${ctx.cupom}${ctx.desconto ? ` (${ctx.desconto}% de desconto)` : ""}` : "",
       ].filter(Boolean).join("\n");
       return `${intro}\n\n${dealLine(ctx.deal, ctx.produto)}${extras ? `\n\n${extras}` : ""}\n\nTem interesse? Se sim, te passo todos os detalhes! 🥰`;
@@ -132,14 +131,14 @@ export const SMART_TEMPLATES: SmartTemplate[] = [
     title: "Confirmação e próximos passos",
     category: "Campanha",
     render: (ctx) =>
-      `Oi, ${ctx.nome}! Que bom que você topou! 🎉\n\nCampanha: ${ctx.campanha || "—"}\n${ctx.produto ? `Produto: ${ctx.produto}\n` : ""}${ctx.prazo ? `Prazo de postagem: ${ctx.prazo}\n` : ""}${ctx.cupom ? `Seu cupom: ${ctx.cupom}${ctx.desconto ? ` (${ctx.desconto}% OFF)` : ""}\n` : ""}\nVou te enviar o briefing e combinar o envio das peças. Pode me confirmar o endereço de entrega? 📦`,
+      `Oi, ${ctx.nome}! Que bom que você topou! 🎉\n\nCampanha: ${ctx.campanha || "—"}\n${ctx.produto ? `Produto: ${ctx.produto}\n` : ""}${ctx.cupom ? `Seu cupom: ${ctx.cupom}${ctx.desconto ? ` (${ctx.desconto}% OFF)` : ""}\n` : ""}\nVou te enviar o briefing e combinar o envio das peças. Pode me confirmar o endereço de entrega? 📦`,
   },
   {
     id: "smart-prazo",
-    title: "Lembrete de prazo de postagem",
+    title: "Cobrança de conteúdo",
     category: "Follow-up",
     render: (ctx) =>
-      `Oi, ${ctx.nome}! Tudo bem? 😊\n\nPassando para lembrar do conteúdo da campanha${ctx.campanha ? ` "${ctx.campanha}"` : ""}${ctx.prazo ? `. O prazo é ${ctx.prazo}` : ""}. Precisa de alguma coisa da nossa parte? Se já tiver o material, pode mandar para aprovação! 📸`,
+      `Oi, ${ctx.nome}! Tudo bem? 😊\n\nPassando para saber como está o conteúdo da campanha${ctx.campanha ? ` "${ctx.campanha}"` : ""}. Precisa de alguma coisa da nossa parte? Se já tiver o material, pode mandar para aprovação! 📸`,
   },
   {
     id: "smart-obrigado",
