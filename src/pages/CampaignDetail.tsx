@@ -1,5 +1,7 @@
 import { InstagramHandle } from "@/components/InstagramHandle";
 import { GenerateMessageDialog } from "@/components/GenerateMessageDialog";
+import { QUICK_ACTIONS, buildQuickPatch, type QuickActionId } from "@/lib/quickLog";
+import { generateBriefingPdf } from "@/lib/briefingPdf";
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import jsPDF from "jspdf";
@@ -228,7 +230,7 @@ export default function CampaignDetail() {
     try { sessionStorage.setItem(`campaign-tab-${id}`, tab); } catch { /* ignore */ }
     setSearchParams((prev) => { const next = new URLSearchParams(prev); next.set("tab", tab); return next; }, { replace: true });
   };
-  const { campaigns, influencers, updateCampaign, deleteCampaign, rateInfluencer, updateInfluencer, shipments, storeUnits, teamMembers } = useApp();
+  const { campaigns, influencers, coupons, updateCampaign, deleteCampaign, rateInfluencer, updateInfluencer, shipments, storeUnits, teamMembers } = useApp();
   const { user } = useAuth();
   const { toast } = useToast();
   const campaign = campaigns.find((c) => c.id === id);
@@ -2529,6 +2531,12 @@ export default function CampaignDetail() {
                           <Badge variant="secondary" className="text-[10px] gap-1 shrink-0">
                             <MapPin className="h-2.5 w-2.5" /> {inf.location || "—"}
                           </Badge>
+                          {p.proposalPending && (
+                            <Badge className="text-[10px] shrink-0 bg-amber-200 text-amber-900 border-amber-400 hover:bg-amber-200">Proposta a analisar</Badge>
+                          )}
+                          {p.viaAssessoria && (
+                            <Badge variant="outline" className="text-[10px] shrink-0">Via assessoria</Badge>
+                          )}
                           {p.contactStatus === "rp" && (
                             <Badge variant="outline" className="text-[10px] bg-purple-100 text-purple-800 border-purple-300 flex items-center gap-1 font-bold">
                               RP
@@ -3108,6 +3116,35 @@ export default function CampaignDetail() {
                                 onChange={(e) => updateParticipant(p.influencerId, { scheduledDate: e.target.value })}
                               />
                             )}
+
+                            <div className="space-y-1.5 pt-2">
+                              <Label className="text-xs font-medium">Registrar conversa</Label>
+                              <div className="flex flex-wrap gap-1.5">
+                                {QUICK_ACTIONS.map((a) => (
+                                  <Button
+                                    key={a.id}
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs"
+                                    onClick={() => {
+                                      const author = noteAuthor[p.influencerId] || teamMembers.find((m) => /ruan ribeiro/i.test(m)) || teamMembers[0] || "Equipe";
+                                      updateParticipant(p.influencerId, buildQuickPatch(p, a.id as QuickActionId, author));
+                                      toast({ title: "Registrado", description: `${inf.name}: ${a.note}` });
+                                    }}
+                                  >
+                                    {a.label}
+                                  </Button>
+                                ))}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="h-7 text-xs gap-1"
+                                onClick={() => generateBriefingPdf(campaign, p, inf, coupons)}
+                              >
+                                <FileText className="h-3 w-3" /> Gerar briefing em PDF
+                              </Button>
+                            </div>
 
                             <div className="space-y-2 pt-2">
                               <Label className="text-xs font-medium">Observações gerais</Label>

@@ -129,6 +129,12 @@ export interface CampaignParticipant {
   campaignRatingReason?: string;
   campaignDeliveryOnTime?: boolean;
   campaignDeliveryLevel?: "baixo" | "bom" | "superou_expectativas";
+  /** Data/hora do último contato registrado (ISO). Usado no painel de pendências. */
+  lastContactAt?: string;
+  /** Proposta recebida e ainda não analisada. */
+  proposalPending?: boolean;
+  /** Contato feito por meio da assessoria do creator. */
+  viaAssessoria?: boolean;
 }
 
 export interface FileAttachment {

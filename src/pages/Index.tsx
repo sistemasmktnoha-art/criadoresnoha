@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Users, UserCheck, UserX, TrendingUp, Megaphone, ArrowRight, Crown, AlertCircle, Gift, CheckCircle2, Ticket, X, MessageSquare, Truck, Package, Cake, CalendarClock, ListChecks, Copy } from "lucide-react";
 import { DashboardCharts } from "@/components/DashboardCharts";
+import { PendingPanel } from "@/components/PendingPanel";
 import { StarRating } from "@/components/StarRating";
 import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -371,6 +372,8 @@ export default function Index() {
           </div>
         </div>
       )}
+
+      <PendingPanel />
 
       {/* Scheduled Content Update Reminders */}
       {scheduledUpdates.length > 0 && (
