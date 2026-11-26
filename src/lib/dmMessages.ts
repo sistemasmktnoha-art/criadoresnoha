@@ -13,6 +13,7 @@ export interface MessageContext {
   nome: string;
   campanha: string;
   prazo: string;
+  descricao: string;
   cupom: string;
   desconto: string;
   produto: string;
@@ -64,6 +65,7 @@ export function buildContext(
     nome: firstName(inf.name),
     campanha: campaign?.name || "",
     prazo: fmtDate(campaign?.deadline),
+    descricao: (campaign?.description || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
     cupom: coupon?.code || "",
     desconto: coupon ? String(coupon.discountPercent) : "",
     produto: participant?.chosenProduct || "",
@@ -79,26 +81,24 @@ export const DEAL_LABEL: Record<Deal, string> = {
   permuta_e_pagamento: "Permuta + pagamento",
 };
 
-function dealLine(deal: Deal, produto: string) {
-  const prod = produto ? ` (${produto})` : "";
-  if (deal === "permuta") return `Seria uma parceria em permuta: enviamos peças da Noha${prod} para você criar o conteúdo.`;
-  if (deal === "pagamento") return "Seria uma parceria com pagamento pela criação do conteúdo, e a gente alinha o valor por aqui.";
-  return `Seria uma parceria com permuta${prod} e pagamento pela criação do conteúdo. A gente alinha os valores por aqui.`;
+const REMETENTE = "Ruan";
+
+/** Parágrafo de conceito da campanha. Natal usa o texto oficial; as demais usam a descrição cadastrada. */
+function conceito(ctx: MessageContext, comVirgulaAntesDeAqui: boolean) {
+  if (/natal/i.test(ctx.campanha)) {
+    return `Estamos dando início a nossa campanha mais especial do ano: O Natal Noha.\nNesse ano, queremos mostrar que${comVirgulaAntesDeAqui ? "," : ""} aqui, cada presente é escolhido com intenção. Cada detalhe faz parte da experiência. E cada caixa carrega um pouco de quem presenteia e de quem recebe.`;
+  }
+  if (ctx.descricao) return `Estamos dando início ${ctx.campanha ? `à campanha ${ctx.campanha}` : "a uma nova campanha"}. ${ctx.descricao}`;
+  return `Estamos dando início ${ctx.campanha ? `à campanha ${ctx.campanha}` : "a uma nova campanha"} e queremos muito contar com você.`;
 }
 
-function lastWork(ctx: MessageContext) {
-  const last = ctx.history[0];
-  if (!last) return "";
-  const how = last.deal === "pagamento" ? " em pagamento" : last.deal === "permuta_e_pagamento" ? " em permuta e pagamento" : last.deal === "permuta" ? " em permuta" : "";
-  return `Lembro com carinho da nossa parceria${last.campaignName ? ` na campanha "${last.campaignName}"` : ""}${how}. `;
-}
+const abertura = (ctx: MessageContext) => `Oiee, ${ctx.nome}, tudo bem? Quem fala é ${REMETENTE}, da Noha.`;
+const campanhaNome = (ctx: MessageContext) => (/natal/i.test(ctx.campanha) ? "nosso Natal Noha" : ctx.campanha ? `a campanha ${ctx.campanha}` : "a campanha");
 
 export interface SmartTemplate {
   id: string;
   title: string;
   category: string;
-  /** Cenário sugerido por padrão. */
-  suggestFor?: Scenario;
   render: (ctx: MessageContext) => string;
 }
 
@@ -108,15 +108,15 @@ export const SMART_TEMPLATES: SmartTemplate[] = [
     title: "Convite para a campanha (adapta ao histórico)",
     category: "Campanha",
     render: (ctx) => {
-      const camp = ctx.campanha ? `a campanha "${ctx.campanha}"` : "uma nova campanha";
-      const intro =
-        ctx.scenario === "recorrente"
-          ? `Oi, ${ctx.nome}! Tudo bem? 💛\n\n${lastWork(ctx)}Estamos preparando ${camp} e queria muito ter você de novo com a gente!`
-          : `Oi, ${ctx.nome}! Tudo bem? 😊\n\nAqui é da Noha Shoes. A gente acompanha o seu conteúdo e acha que tem tudo a ver com a marca! Estamos preparando ${camp} e queria te convidar para fazer parte.`;
-      const extras = [
-        ctx.cupom ? `🏷️ Seu cupom: ${ctx.cupom}${ctx.desconto ? ` (${ctx.desconto}% de desconto)` : ""}` : "",
-      ].filter(Boolean).join("\n");
-      return `${intro}\n\n${dealLine(ctx.deal, ctx.produto)}${extras ? `\n\n${extras}` : ""}\n\nTem interesse? Se sim, te passo todos os detalhes! 🥰`;
+      const novo = ctx.scenario === "novo";
+      const pago = ctx.deal === "pagamento" || ctx.deal === "permuta_e_pagamento";
+      if (novo) {
+        return `${abertura(ctx)}\n\nSomos uma marca de calçados e acessórios masculinos, que se inspira na moda e elegância italiana.\n\n${conceito(ctx, false)}\n\nAmaríamos ter você com a gente nessa campanha.\n\nMe conta, como está sua agenda na próxima semana? Topa participar d${/natal/i.test(ctx.campanha) ? "o nosso Natal Noha" : "a nossa campanha"}?`;
+      }
+      if (pago) {
+        return `${abertura(ctx)}\n\n${conceito(ctx, true)}\n\nAmaríamos ter você com a gente novamente, para celebrar essa época tão especial.\n\nMe conta, como está sua agenda na próxima semana? Quais seriam as condições para seguirmos com a parceria?\n\nTamo junto!`;
+      }
+      return `${abertura(ctx)}\n\n${conceito(ctx, true)}\n\nAmaríamos ter você com a gente novamente, e para celebrar essa época tão especial gostaríamos de te presentear com um Noha, para se presentear, ou, para presentear quem você ama, e compartilhar sua experiência com a sua audiência.\n\nMe conta, como está sua agenda na próxima semana? Topa participar novamente conosco?`;
     },
   },
   {
@@ -124,28 +124,28 @@ export const SMART_TEMPLATES: SmartTemplate[] = [
     title: "Follow-up (sem retorno)",
     category: "Follow-up",
     render: (ctx) =>
-      `Oi, ${ctx.nome}! Tudo bem? 😊\n\nPassando para saber se você viu minha mensagem sobre ${ctx.campanha ? `a campanha "${ctx.campanha}"` : "a parceria com a Noha"}. Ainda dá tempo de participar e ficaria muito feliz em ter você com a gente! Se não tiver interesse agora, sem problemas, é só me avisar. 💛`,
+      `Oiee, ${ctx.nome}, tudo bem? ${REMETENTE}, da Noha, por aqui.\n\nPassando para saber se você conseguiu ver minha mensagem sobre ${campanhaNome(ctx)}. Seria um prazer ter você com a gente.\n\nSe não fizer sentido agora, sem problemas. É só me avisar.\n\nTamo junto!`,
   },
   {
     id: "smart-briefing",
     title: "Confirmação e próximos passos",
     category: "Campanha",
     render: (ctx) =>
-      `Oi, ${ctx.nome}! Que bom que você topou! 🎉\n\nCampanha: ${ctx.campanha || "—"}\n${ctx.produto ? `Produto: ${ctx.produto}\n` : ""}${ctx.cupom ? `Seu cupom: ${ctx.cupom}${ctx.desconto ? ` (${ctx.desconto}% OFF)` : ""}\n` : ""}\nVou te enviar o briefing e combinar o envio das peças. Pode me confirmar o endereço de entrega? 📦`,
+      `${ctx.nome}, que bom ter você com a gente! 🤍\n\nVou te enviar o briefing d${/natal/i.test(ctx.campanha) ? "o nosso Natal Noha" : "a campanha"} para alinharmos todos os detalhes.${ctx.produto ? `\n\nO produto que separamos para você: ${ctx.produto}.` : ""}${ctx.cupom ? `\n\nSeu cupom exclusivo: ${ctx.cupom}${ctx.desconto ? ` (${ctx.desconto}% de desconto)` : ""}.` : ""}\n\nPode me confirmar o melhor endereço para o envio?\n\nQualquer dúvida, é só chamar.`,
   },
   {
     id: "smart-prazo",
     title: "Cobrança de conteúdo",
     category: "Follow-up",
     render: (ctx) =>
-      `Oi, ${ctx.nome}! Tudo bem? 😊\n\nPassando para saber como está o conteúdo da campanha${ctx.campanha ? ` "${ctx.campanha}"` : ""}. Precisa de alguma coisa da nossa parte? Se já tiver o material, pode mandar para aprovação! 📸`,
+      `Oiee, ${ctx.nome}, tudo bem?\n\nPassando para saber como está o conteúdo d${/natal/i.test(ctx.campanha) ? "o Natal Noha" : "a campanha"}. Se já tiver o material, pode me enviar por aqui para aprovarmos juntos.\n\nSe precisar de qualquer coisa da nossa parte, é só falar.\n\nTamo junto!`,
   },
   {
     id: "smart-obrigado",
     title: "Agradecimento pós-campanha",
     category: "Pós-campanha",
     render: (ctx) =>
-      `Oi, ${ctx.nome}! 💛\n\nObrigada pela parceria${ctx.campanha ? ` na campanha "${ctx.campanha}"` : ""}! O conteúdo ficou incrível. Vamos adorar trabalhar com você de novo em breve!`,
+      `${ctx.nome}, muito obrigado pela parceria${/natal/i.test(ctx.campanha) ? " no Natal Noha" : ctx.campanha ? ` na campanha ${ctx.campanha}` : ""}. 🤍\n\nO conteúdo ficou lindo e representou exatamente o que queremos transmitir. Foi um prazer ter você com a gente.\n\nVamos adorar celebrar novas histórias juntos.\n\nTamo junto!`,
   },
 ];
 
