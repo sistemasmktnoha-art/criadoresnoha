@@ -14,6 +14,7 @@ export interface MessageContext {
   campanha: string;
   prazo: string;
   descricao: string;
+  genero: "f" | "m" | "";
   cupom: string;
   desconto: string;
   produto: string;
@@ -22,7 +23,15 @@ export interface MessageContext {
   history: PastPartnership[];
 }
 
-const firstName = (full: string) => (full || "").trim().split(/\s+/)[0] || "";
+const SKIP_TITLES = new Set(["chef", "dr", "dra", "prof", "profa", "mª", "ma"]);
+const cap = (w: string) =>
+  w.normalize("NFKC").split("-").map((x) => (x ? x.charAt(0).toLocaleUpperCase("pt-BR") + x.slice(1).toLocaleLowerCase("pt-BR") : x)).join("-");
+/** Primeiro nome com a inicial maiúscula e o resto minúsculo (ignora títulos como Dra., Chef). */
+export const firstName = (full: string) => {
+  const parts = (full || "").trim().split(/\s+/).filter(Boolean);
+  const pick = parts.map((w) => w.normalize("NFKC")).find((w) => !SKIP_TITLES.has(w.toLowerCase().replace(/\.$/, ""))) || parts[0] || "";
+  return cap(pick.replace(/[^\p{L}\p{M}'-]/gu, ""));
+};
 
 function fmtDate(iso?: string) {
   if (!iso) return "";
@@ -63,6 +72,7 @@ export function buildContext(
   const neg = participant?.negotiationType;
   return {
     nome: firstName(inf.name),
+    genero: /^f/i.test(inf.gender || "") ? "f" : /^m/i.test(inf.gender || "") ? "m" : "",
     campanha: campaign?.name || "",
     prazo: fmtDate(campaign?.deadline),
     descricao: (campaign?.description || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
@@ -118,6 +128,42 @@ export const SMART_TEMPLATES: SmartTemplate[] = [
       }
       return `${abertura(ctx)}\n\n${conceito(ctx, true)}\n\nAmaríamos ter você com a gente novamente, e para celebrar essa época tão especial gostaríamos de te presentear com um Noha, para se presentear, ou, para presentear quem você ama, e compartilhar sua experiência com a sua audiência.\n\nMe conta, como está sua agenda na próxima semana? Topa participar novamente conosco?`;
     },
+  },
+  {
+    id: "smart-whats-primeira",
+    title: "Primeira mensagem no WhatsApp (depois do Instagram)",
+    category: "Campanha",
+    render: (ctx) => {
+      const natal = /natal/i.test(ctx.campanha);
+      const quando = natal ? "nossa campanha de Natal" : ctx.campanha ? `a campanha ${ctx.campanha}` : "uma nova campanha";
+      return `Oiee! Tudo bem? Ruan, do Marketing da Noha, aqui!\nConforme conversamos pelo Instagram, estamos preparando ${quando} e seria muito legal ter você com a gente nessa ação!\nPosso te enviar o briefing pra você entender melhor a proposta? ${natal ? "🎄✨" : "✨"}`;
+    },
+  },
+  {
+    id: "smart-assessoria-convite",
+    title: "Assessoria: convite (falando com a assessoria)",
+    category: "Assessoria",
+    render: (ctx) => {
+      const novo = ctx.scenario === "novo";
+      const pago = ctx.deal === "pagamento" || ctx.deal === "permuta_e_pagamento";
+      const dela = ctx.genero === "f" ? "dela" : ctx.genero === "m" ? "dele" : `de ${ctx.nome}`;
+      const abertura = "Oiee! Tudo bem? Ruan, do Marketing da Noha, por aqui.";
+      const marca = novo ? "Somos uma marca de calçados e acessórios masculinos, que se inspira na moda e elegância italiana.\n\n" : "";
+      const quer = novo
+        ? `Gostaríamos muito de ter ${ctx.nome} com a gente nessa campanha.`
+        : `Amaríamos ter ${ctx.nome} com a gente novamente, para celebrar essa época tão especial.`;
+      const final = pago
+        ? `Como está a agenda ${dela} na próxima semana? Consigo te enviar o briefing para você montar o orçamento?`
+        : `A ideia é presentear ${ctx.nome} com um Noha, para se presentear ou para presentear quem ama, e compartilhar a experiência com a audiência.\n\nComo está a agenda ${dela} na próxima semana? Faz sentido para vocês?`;
+      return `${abertura}\n\n${marca}${conceito(ctx, !novo)}\n\n${quer}\n\n${final}\n\nTamo junto!`;
+    },
+  },
+  {
+    id: "smart-assessoria-followup",
+    title: "Assessoria: follow-up (sem retorno)",
+    category: "Assessoria",
+    render: (ctx) =>
+      `Oiee! Tudo bem? Passando pra retomar nosso convite para ${/natal/i.test(ctx.campanha) ? "o Natal Noha" : ctx.campanha ? `a campanha ${ctx.campanha}` : "a nossa campanha"} com ${ctx.nome}. Conseguiram ver por aí? Ficamos no aguardo, e se for mais fácil, a gente alinha tudo por aqui mesmo! 🎄✨`,
   },
   {
     id: "smart-followup",

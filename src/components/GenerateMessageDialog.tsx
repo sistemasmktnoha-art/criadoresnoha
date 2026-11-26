@@ -39,8 +39,12 @@ export function GenerateMessageDialog({ open, onOpenChange, influencer, campaign
   const [dShip, setDShip] = useState((campaign?.startDate || "").slice(0, 10));
 
   useEffect(() => {
-    if (open) { setScenario(base.scenario); setDeal(base.deal); }
-  }, [open, base.scenario, base.deal]);
+    if (open) {
+      setScenario(base.scenario);
+      setDeal(base.deal);
+      setTemplateId(participant?.viaAssessoria ? "smart-assessoria-convite" : "smart-convite");
+    }
+  }, [open, base.scenario, base.deal, participant?.viaAssessoria]);
 
   const ctx = useMemo(() => ({ ...base, scenario, deal }), [base, scenario, deal]);
   const userTemplates = messageTemplates ?? [];
