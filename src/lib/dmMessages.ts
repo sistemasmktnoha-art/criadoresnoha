@@ -124,7 +124,7 @@ export const SMART_TEMPLATES: SmartTemplate[] = [
     title: "Follow-up (sem retorno)",
     category: "Follow-up",
     render: (ctx) =>
-      `Oiee, ${ctx.nome}, tudo bem? ${REMETENTE}, da Noha, por aqui.\n\nPassando para saber se você conseguiu ver minha mensagem sobre ${campanhaNome(ctx)}. Seria um prazer ter você com a gente.\n\nSe não fizer sentido agora, sem problemas. É só me avisar.\n\nTamo junto!`,
+      `Oiee! Tudo bem? Passando pra retomar nosso convite para ${/natal/i.test(ctx.campanha) ? "o Natal Noha" : ctx.campanha ? `a campanha ${ctx.campanha}` : "a nossa campanha"}! Você consegue me passar seu WhatsApp pra facilitar nossa comunicação? 🎄✨`,
   },
   {
     id: "smart-briefing",
