@@ -1,5 +1,7 @@
 import { InstagramHandle } from "@/components/InstagramHandle";
 import { GenerateMessageDialog } from "@/components/GenerateMessageDialog";
+import { BatchBar } from "@/components/BatchBar";
+import { BatchMessagesDialog } from "@/components/BatchMessagesDialog";
 import { QUICK_ACTIONS, buildQuickPatch, type QuickActionId } from "@/lib/quickLog";
 import { generateBriefingPdf } from "@/lib/briefingPdf";
 import React, { useState, useCallback, useMemo, useEffect } from "react";
@@ -236,6 +238,8 @@ export default function CampaignDetail() {
   const campaign = campaigns.find((c) => c.id === id);
 
   const [msgFor, setMsgFor] = useState<string | null>(null);
+  const [batchSel, setBatchSel] = useState<string[]>([]);
+  const [batchMsgOpen, setBatchMsgOpen] = useState(false);
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
   const [editingMatId, setEditingMatId] = useState<string | null>(null);
   const [contentDialogOpen, setContentDialogOpen] = useState(false);
@@ -514,6 +518,15 @@ export default function CampaignDetail() {
       p.influencerId === influencerId ? { ...p, ...patch } : p
     );
     update({ participants });
+  }
+
+  function applyBatch(actionId: QuickActionId) {
+    const author = teamMembers.find((m) => /ruan ribeiro/i.test(m)) || teamMembers[0] || "Equipe";
+    const ids = new Set(batchSel);
+    const participants = campaign!.participants.map((p) => (ids.has(p.influencerId) ? { ...p, ...buildQuickPatch(p, actionId, author) } : p));
+    update({ participants });
+    const label = QUICK_ACTIONS.find((a) => a.id === actionId)?.note || "";
+    toast({ title: "Registrado em lote", description: `${ids.size} participante${ids.size > 1 ? "s" : ""}: ${label}` });
   }
 
   function handleContentStatus(contentId: string, newStatus: "aguardando_aprovacao" | "aguardando_ajuste" | "aprovado") {
@@ -2482,7 +2495,15 @@ export default function CampaignDetail() {
               });
 
             let lastGroup: string | null = null;
-            return sortedVisible.map((p) => {
+            return (<>
+            <BatchBar
+              visibleIds={sortedVisible.map((p) => p.influencerId)}
+              selected={batchSel}
+              setSelected={setBatchSel}
+              onAction={applyBatch}
+              onGenerate={() => setBatchMsgOpen(true)}
+            />
+            {sortedVisible.map((p) => {
               const gId = getGroup(p);
               const gMeta = GROUPS.find((g) => g.id === gId)!;
               const headerEl = gId !== lastGroup
@@ -2519,6 +2540,12 @@ export default function CampaignDetail() {
 
                   <CardContent className="p-0">
                     <div className="flex items-center gap-3 p-4">
+                      <Checkbox
+                        checked={batchSel.includes(p.influencerId)}
+                        onCheckedChange={(v) => setBatchSel((prev) => (v ? [...prev, p.influencerId] : prev.filter((x) => x !== p.influencerId)))}
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label={`Selecionar ${inf.name}`}
+                      />
                       <img src={inf.profilePic} alt={inf.name} className="h-10 w-10 rounded-full object-cover" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -3277,7 +3304,8 @@ export default function CampaignDetail() {
               </Collapsible>
               </React.Fragment>
             );
-            });
+            })}
+            </>);
           })()}
           {/* Não aprovados */}
           {(() => {
@@ -3615,6 +3643,10 @@ export default function CampaignDetail() {
           )}
         </TabsContent>
       </Tabs>
+
+      {batchMsgOpen && (
+        <BatchMessagesDialog open onOpenChange={(o) => { if (!o) setBatchMsgOpen(false); }} campaign={campaign} ids={batchSel} />
+      )}
 
       {msgFor && (() => {
         const mi = influencers.find((i) => i.id === msgFor);
